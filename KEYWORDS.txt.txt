@@ -1,0 +1,29 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PoluluMotor	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+attachEncoder	KEYWORD2
+detachEncoder	KEYWORD2
+setDuty		KEYWORD2
+setRefSpeed	KEYWORD2
+setGains	KEYWORD2
+setPIDEngage	KEYWORD2
+getSpeed	KEYWORD2
+getDirection	KEYWORD2
+brake		KEYWORD2
+reverse 	KEYWORD2
+applyUpdate	KEYWORD2
+
+######################################
+# Constants (LITERAL1)
+#######################################
+MAX_SPEED	LITERAL1
