@@ -145,6 +145,7 @@ void PoluluMotor::attachEncoder(uint8_t pinENCA){
   if (this->me_instance == 2){ m2_encA = pinENCA;}
   
   this->feedback_enable = true;
+  encoders.init(m1_encA, m1_encB, m2_encA, m2_encB);
 }
 
 
@@ -164,6 +165,7 @@ void PoluluMotor::attachEncoder(uint8_t pinENCA, uint8_t pinENCB){
   if (this->me_instance == 2){m2_encA = pinENCA; m2_encB = pinENCB;}
   
   this->feedback_enable = true;
+  encoders.init(m1_encA, m1_encB, m2_encA, m2_encB);  
 }
 
 
@@ -180,7 +182,8 @@ void PoluluMotor::detachEncoder(){
   if (this->me_instance == 1){ m1_encA = 255; m1_encB = 255;}
   if (this->me_instance == 2){ m2_encA = 255; m2_encB = 255;}
   
-  this->feedback_enable = false;  
+  this->feedback_enable = false;
+  encoders.init(m1_encA, m1_encB, m2_encA, m2_encB);  
 }
 
 
@@ -276,6 +279,7 @@ double PoluluMotor::getSpeed(){
     if (this->me_instance == 2) {count = encoders.getCountsAndResetM2();}
     
     this->currSpeed = (count/1636.8) * (1000 / _now) * 60;  //in RPM
+    return this->currSpeed;
   }
 }
 
@@ -331,6 +335,7 @@ Description:
   
 **********************************************************************************/
 void PoluluMotor::reverse(){
+  
   this->brake(2);
   if (this->isClockwise == true) {digitalWrite(this->in1, LOW); digitalWrite(this->in2, HIGH); isClockwise = false; }
   else                           {digitalWrite(this->in1, HIGH); digitalWrite(this->in2, LOW); isClockwise = true ; }  
@@ -349,6 +354,7 @@ Description:
   
 **********************************************************************************/
 void PoluluMotor::applyUpdate(){
+  
   if (this->pid_engage == false){ 
     setPWM(this->pwm, this->refSpeed/MAX_SPEED); 
   }
