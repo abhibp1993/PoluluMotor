@@ -1,7 +1,7 @@
 # PoluluMotor
 Arduino Library for Interfacing Polulu Motor.
 
-This library allows to interface upto 2 Polulu metal gearmotors with 48CPR encoders with Arduino. In general, any PMDC motor with it's respective driver with 3 control signals `PWM`, `DIR_1`, `DIR_2` can be controlled using `PoluluMotor` Class. 
+This library allows to interface upto 2 Polulu metal gearmotors with 48CPR encoders with Arduino. In general, any PMDC motor with it's respective H-bridge driver with 3 control signals `PWM`, `IN1`, `IN2` can be controlled using `PoluluMotor` Class. 
 
 ## Table of Contents
 - Installation
