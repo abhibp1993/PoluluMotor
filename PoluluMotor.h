@@ -26,8 +26,8 @@
 #ifndef POLULUMOTOR_h
 #define POLULUMOTOR_h
 
-#include <PID_v1.h>
-#include <PololuWheelEncoders.h>
+#include <../PID_v1/PID_v1.h>
+#include <../PololuWheelEncoders/PololuWheelEncoders.h>
 #include "Arduino.h"
 
 

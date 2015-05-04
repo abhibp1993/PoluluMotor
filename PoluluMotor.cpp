@@ -1,5 +1,5 @@
 /************************************************************************************************************
- * PoluluMotor.cpp - Arduino library for interfacing Polulu metal gearmotors with/without encoders.           *
+ * PoluluMotor.cpp - Arduino library for interfacing Polulu metal gearmotors with/without encoders.         *
  *																											*
  * Copyright 2015 Abhishek N. Kulkarni (abhi.bp1993@gmail.com)		                                        *
  * The library is available at https://github.com/abhibp1993/PoluluMotor/									*
@@ -33,6 +33,12 @@ int PoluluMotor::m1_encB = 255;
 int PoluluMotor::m2_encA = 255;
 int PoluluMotor::m2_encB = 255;
 
+
+
+double map(double x, double in_min, double in_max, double out_min, double out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 
 /* [HELPER]**********************************************************************
@@ -122,6 +128,61 @@ void setPWM(uint8_t pin_pwm, double duty){
   /* Set PWM duty */
   analogWrite(pin_pwm, (uint8_t)(duty * 255));
   
+}
+
+
+/* [HELPER]**********************************************************************
+Function: PIDCompute
+Parameters: None
+
+Description:
+  The function internally adjusts the pwm frequency and generates the pwm 
+  according to given duty cycle.
+  
+  $$ Currently the function works only for pin_pwm = 9 AND pin_pwm = 10. $$ 
+  
+**********************************************************************************/
+int SampleTime = 50, outMax = 1.0, outMin = 0.0;
+double PIDCompute(double Input, double Setpoint, double kp, double ki, double kd)
+{
+//   Serial.print("Input: ");   Serial.println( Input );
+//   Serial.print("SetPoint: ");   Serial.println( Setpoint);
+   
+   static unsigned long lastTime;
+   static double lastInput;
+   static double ITerm;
+   
+   unsigned long now = millis();
+   unsigned long timeChange = (now - lastTime);
+   if(timeChange>=SampleTime)
+   {
+      /*Compute all the working error variables*/
+	  double input = Input;
+      double error = Setpoint - input;
+      
+	  ITerm+= (ki * error);
+      if(ITerm > outMax) ITerm= outMax;
+      else if(ITerm < outMin) ITerm= outMin;
+	  
+      double dInput = (input - lastInput);
+ 
+      /*Compute PID Output*/
+//	  Serial.print("P-Error: ");   Serial.println( error);
+//	  Serial.print("I-Error: ");   Serial.println( ITerm);
+//	  Serial.print("D-Error: ");   Serial.println( dInput);
+      double output = kp * error + ITerm - kd * dInput;
+//      Serial.print("Output: ");   Serial.println( output );
+	  
+	  if(output > outMax) output = outMax;
+      else if(output < outMin) output = outMin;
+	  
+      /*Remember some variables for next time*/
+      lastInput = input;
+      lastTime = now;
+	  return output;
+	  
+   }
+   else return 100.0;
 }
 
 
@@ -237,7 +298,7 @@ Description:
   The function updates the value of internal setpoint for speed.
 **********************************************************************************/
 void PoluluMotor::setRefSpeed(double rpm){
-  this->refSpeed = rpm;
+  this->refSpeed = map(rpm, 0.0, 300.0, 0.0, 1.0);
 }
 
 
@@ -274,8 +335,8 @@ Description:
 **********************************************************************************/
 void  PoluluMotor::setPIDEngage(boolean value){
   this->pid_engage = value;
-  
-  myPID->SetMode(AUTOMATIC);   // automatic PID tunings
+	
+  //myPID->SetMode(AUTOMATIC);   // automatic PID tunings
   //myPID.SetMode(MANUAL);      // manual PID tunings  
 }
 
@@ -306,6 +367,10 @@ double PoluluMotor::getSpeed(){
     this->currSpeed = (count/1636.8) * (1000 / _now) * 60;  //in RPM
     return this->currSpeed;
   }
+  
+//  Serial.println(analogRead(A0));
+  this->currSpeed = map(analogRead(A0), 0.0, 1024.0, 0.0, 1.0);
+  return this->currSpeed;
 }
 
 
@@ -384,8 +449,10 @@ void PoluluMotor::applyUpdate(){
     setPWM(this->pwm, this->refSpeed/MAX_SPEED); 
   }
   else { 
-    this->myPID->Compute(); 
-    setPWM(this->pwm, constrain(this->output, 0, 1)); 
+    this->output = PIDCompute(this->currSpeed, this->refSpeed, this->Kp, this->Ki, this->Kd); 
+	double constrnVal = constrain(this->output, 0, 1);
+//	Serial.print("Output: ");   Serial.println( constrnVal);
+    setPWM(this->pwm, constrnVal); 
   }
   
 }
