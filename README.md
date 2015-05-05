@@ -51,6 +51,24 @@ To detach the encoders use `m1.detachEncoders()`.
 If the encoders are attached, the speed can be sensed in RPM using `double speed = m1.getSpeed()`. 
 
 
+## 3. PID Algorithm
+The library also provides an option to use PID algorithm for speed control. The implementation is inspired from PID library by [Brett Beauregard](http://playground.arduino.cc/Code/PIDLibrary). To use this feature, you will require to set the gains then engage PID algorithm. This can be done using
 
+```cpp 
+m1.setGains(0.5, 0.1, 0.05);    // Set the gains for motor1
+m1.setPIDEngage(true);          // enable PID corrections for motor1
+```
+
+Finally, in the loop, update the current speed and call `applyUpdate` to apply single PID correction to speed. Optionally you may update the reference speed using `m1.setRefSpeed(...)` in case the speed set-point varies with time.
+
+```cpp
+m1.getSpeed();          // Update speed value for motor1
+m1.applyUpdate();       // Apply PID Correction to motor1 speed
+```
+
+
+## 4. Limitations
+- Only `two` instances of PoluluMotor are permitted due to constraints from `PoluluWheelEncoders` library.
+- No gain autotuning feature available for PID. (refer library by [Brett Beauregard](http://playground.arduino.cc/Code/PIDLibrary) for autotuning).
 
 
