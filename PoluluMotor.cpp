@@ -229,8 +229,8 @@ Description:
   function when single channel of encoder will be used.
 **********************************************************************************/
 void PoluluMotor::attachEncoder(uint8_t pinENCA){
-  if (this->me_instance == 1){ m1_encA = pinENCA;}   
-  if (this->me_instance == 2){ m2_encA = pinENCA;}
+  if (this->me_instance == 1){ m1_encA = pinENCA; this->isQuadrature = false;}   
+  if (this->me_instance == 2){ m2_encA = pinENCA; this->isQuadrature = false;}
   
   this->feedback_enable = true;
   encoders.init(m1_encA, m1_encB, m2_encA, m2_encB);
@@ -249,8 +249,16 @@ Description:
   function when both channels of quadrature encoder will be used.
 **********************************************************************************/
 void PoluluMotor::attachEncoder(uint8_t pinENCA, uint8_t pinENCB){
-  if (this->me_instance == 1){ m1_encA = pinENCA; m1_encB = pinENCB;}
-  if (this->me_instance == 2){m2_encA = pinENCA; m2_encB = pinENCB;}
+  if (this->me_instance == 1){ 
+	m1_encA = pinENCA; 
+	m1_encB = pinENCB;
+	this->isQuadrature = true;
+  }
+  if (this->me_instance == 2){ 
+	m2_encA = pinENCA; 
+	m2_encB = pinENCB;
+	this->isQuadrature = true;
+  }
   
   this->feedback_enable = true;
   encoders.init(m1_encA, m1_encB, m2_encA, m2_encB);  
@@ -396,6 +404,8 @@ double PoluluMotor::getSpeed(){
     if (this->me_instance == 2) {count = encoders.getCountsAndResetM2();}
     
     this->currSpeed = (count/1636.8) * (1000 / _now) * 60;  //in RPM
+	
+	if (this->isQuadrature == false) { this->currSpeed = 2 * this->currSpeed; }
     return this->currSpeed;
   }
   

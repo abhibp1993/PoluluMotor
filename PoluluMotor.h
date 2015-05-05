@@ -26,7 +26,6 @@
 #ifndef POLULUMOTOR_h
 #define POLULUMOTOR_h
 
-//#include <../PID_v1/PID_v1.h>
 #include <../PololuWheelEncoders/PololuWheelEncoders.h>
 #include "Arduino.h"
 
@@ -70,7 +69,7 @@ class PoluluMotor{
   public:  // Variables
     int me_instance;
     boolean pid_engage, motor_enable, feedback_enable;
-    boolean isClockwise;
+    boolean isClockwise, isQuadrature;
     
     uint8_t pwm, in1, in2;
     double currSpeed, refSpeed, output;
