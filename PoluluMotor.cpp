@@ -355,6 +355,35 @@ Description:
   
   $$ The caibration is not yet done. The value is theoretical $$
 **********************************************************************************/
+void PoluluMotor::motorEnable(boolean val){
+	if (val == true){
+		this->motor_enable = true;
+		
+		digitalWrite(this->in1, HIGH);
+		digitalWrite(this->in2, LOW);
+		pinMode(this->pwm, OUTPUT);
+	}
+	else{
+		this->motor_enable = false;
+		
+		digitalWrite(this->in1, LOW);
+		digitalWrite(this->in2, LOW);
+		pinMode(this->pwm, INPUT);
+	}
+}
+
+
+/**********************************************************************************
+Function: getSpeed
+Parameters: None
+Returns: Speed in RPM (double)
+
+Description:
+  The function computes the current speed of motor based on encoder counts and 
+  returns the speed in RPM.
+  
+  $$ The caibration is not yet done. The value is theoretical $$
+**********************************************************************************/
 double PoluluMotor::getSpeed(){
   if (feedback_enable == true){
     
@@ -447,13 +476,12 @@ Description:
 **********************************************************************************/
 void PoluluMotor::applyUpdate(){
   
-  if (this->pid_engage == false){ 
-    setPWM(this->pwm, this->refSpeed/MAX_SPEED); 
+  if (this->pid_engage == false && this->motor_enable == true){ 
+    setPWM(this->pwm, this->refSpeed); 
   }
-  else { 
+  else if (this->pid_engage == true && this->motor_enable == true) { 
     this->output = PIDCompute(this->currSpeed, this->refSpeed, this->Kp, this->Ki, this->Kd, &(this->lastInput), &(this->ITerm)); 
 	double constrnVal = constrain(this->output, 0, 1);
-//	Serial.print("Output: ");   Serial.println( constrnVal);
     setPWM(this->pwm, constrnVal); 
   }
   

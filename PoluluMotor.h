@@ -56,7 +56,8 @@ class PoluluMotor{
     void setRefSpeed(double rpm);                                     // Set the reference speed (if PID engaged, pid shall be used)
     void setGains(double Kp, double Ki, double Kd);                   // PID gains, if engaged
     void setPIDEngage(boolean value);                                 // Set the pid_engage variable value
-    
+	void motorEnable(boolean val);									  // Set if motor should be enabled or not.
+	
     double getSpeed();                                                // Returns the speed in RPM
     uint8_t getDirection();                                           // Returns the direction of rotation (1: Clockwise, 0: Stopped, -1: Anticlockwise)
     
