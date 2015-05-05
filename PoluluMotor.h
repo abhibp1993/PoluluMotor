@@ -26,12 +26,18 @@
 #ifndef POLULUMOTOR_h
 #define POLULUMOTOR_h
 
-#include <../PID_v1/PID_v1.h>
+//#include <../PID_v1/PID_v1.h>
 #include <../PololuWheelEncoders/PololuWheelEncoders.h>
 #include "Arduino.h"
 
 
-#define MAX_SPEED 300
+//**************************************************************************
+// MAKE CONFIGURATION CHANGES HERE
+#define MAX_SPEED 				300
+#define VAR_FREQ_ENABLE 		true
+
+//**************************************************************************
+
 
 class PoluluMotor{
   
@@ -67,9 +73,9 @@ class PoluluMotor{
     
     uint8_t pwm, in1, in2;
     double currSpeed, refSpeed, output;
-    double Kp, Ki, Kd;
+    double Kp, Ki, Kd, lastInput, ITerm;
   
-    PID* myPID;    
+    //PID* myPID;    
     
 };
 

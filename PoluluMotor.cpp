@@ -34,7 +34,20 @@ int PoluluMotor::m2_encA = 255;
 int PoluluMotor::m2_encB = 255;
 
 
+/* [HELPER]**********************************************************************
+Function: map
+Parameters: 
+  1. x: parameter whose value is to be mapped
+  2. in_min: from value (lower end)
+  2. in_max: from value (upper end)
+  2. out_min: to value (lower end)
+  2. out_min: to value (upper end)
 
+Description:
+  The function overloads the internal 'map' function which maps
+  only integer values for floats and doubles.
+  
+**********************************************************************************/
 double map(double x, double in_min, double in_max, double out_min, double out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -99,31 +112,33 @@ Parameters:
 
 Description:
   The function internally adjusts the pwm frequency and generates the pwm 
-  according to given duty cycle.
+  according to given duty cycle. (The variable frequency drive is enabled
+  if the VAR_FREQ_ENABLE is set to 'true')
   
   $$ Currently the function works only for pin_pwm = 9 AND pin_pwm = 10. $$ 
   
 **********************************************************************************/
 void setPWM(uint8_t pin_pwm, double duty){
   
-  static int div9, div10;
-  
-  /* Get the required divisor for given duty */
-  int reqdDivisor = getDivisor(duty);
-  
-  
-  /* Set the appropriate frequency for each pin */
-  if (pin_pwm == 9) {  div9 = reqdDivisor; }
-  if (pin_pwm == 10){ div10 = reqdDivisor; }
-  
-  
-  /* Choose minimum of required frequencies of both motors */
-  reqdDivisor = max(div9, div10);
-  
-  
-  /* Set appropriate frequency of PWM */
-  setPWMFrequency(pin_pwm, reqdDivisor);
-  
+  if (VAR_FREQ_ENABLE){
+	  static int div9, div10;
+	  
+	  /* Get the required divisor for given duty */
+	  int reqdDivisor = getDivisor(duty);
+	  
+	  
+	  /* Set the appropriate frequency for each pin */
+	  if (pin_pwm == 9) {  div9 = reqdDivisor; }
+	  if (pin_pwm == 10){ div10 = reqdDivisor; }
+	  
+	  
+	  /* Choose minimum of required frequencies of both motors */
+	  reqdDivisor = max(div9, div10);
+	  
+	  
+	  /* Set appropriate frequency of PWM */
+	  setPWMFrequency(pin_pwm, reqdDivisor);
+	}	  
   
   /* Set PWM duty */
   analogWrite(pin_pwm, (uint8_t)(duty * 255));
@@ -133,56 +148,42 @@ void setPWM(uint8_t pin_pwm, double duty){
 
 /* [HELPER]**********************************************************************
 Function: PIDCompute
-Parameters: None
+Parameters: 
+	1. Input: feedback input received
+	2. Setpoint: The desired setpoint value
+	3. Kp: Proportional gain
+	4. Ki: Integral gain
+	5. Kd: Derivative gain
 
 Description:
-  The function internally adjusts the pwm frequency and generates the pwm 
-  according to given duty cycle.
+  Applies PID Correction to input according to setpoint and returns a corrected
+  output value.
   
-  $$ Currently the function works only for pin_pwm = 9 AND pin_pwm = 10. $$ 
+  $$ The internal values to be stored for different motors are not handled yet. $$
   
 **********************************************************************************/
-int SampleTime = 50, outMax = 1.0, outMin = 0.0;
-double PIDCompute(double Input, double Setpoint, double kp, double ki, double kd)
-{
-//   Serial.print("Input: ");   Serial.println( Input );
-//   Serial.print("SetPoint: ");   Serial.println( Setpoint);
-   
-   static unsigned long lastTime;
-   static double lastInput;
-   static double ITerm;
-   
-   unsigned long now = millis();
-   unsigned long timeChange = (now - lastTime);
-   if(timeChange>=SampleTime)
-   {
-      /*Compute all the working error variables*/
-	  double input = Input;
-      double error = Setpoint - input;
-      
-	  ITerm+= (ki * error);
-      if(ITerm > outMax) ITerm= outMax;
-      else if(ITerm < outMin) ITerm= outMin;
-	  
-      double dInput = (input - lastInput);
- 
-      /*Compute PID Output*/
-//	  Serial.print("P-Error: ");   Serial.println( error);
-//	  Serial.print("I-Error: ");   Serial.println( ITerm);
-//	  Serial.print("D-Error: ");   Serial.println( dInput);
-      double output = kp * error + ITerm - kd * dInput;
-//      Serial.print("Output: ");   Serial.println( output );
-	  
-	  if(output > outMax) output = outMax;
-      else if(output < outMin) output = outMin;
-	  
-      /*Remember some variables for next time*/
-      lastInput = input;
-      lastTime = now;
-	  return output;
-	  
-   }
-   else return 100.0;
+double outMax = 1.0, outMin = 0.0;
+double PIDCompute(double input, double setpoint, double kp, double ki, double kd, double* lastInput, double* ITerm)
+{   
+	/*Compute all the working error variables*/
+	double error = setpoint - input;
+
+	*(ITerm) += (ki * error);
+	if(*ITerm > outMax) *ITerm= outMax;
+	else if(*ITerm < outMin) *ITerm= outMin;
+
+	double dInput = (input - *lastInput);
+
+	/*Compute PID Output*/
+	double output = kp * error + *ITerm - kd * dInput;
+
+	if(output > outMax) output = outMax;
+	else if(output < outMin) output = outMin;
+
+	/*Remember some variables for next time*/
+	*lastInput = input;
+	return output;
+
 }
 
 
@@ -212,7 +213,8 @@ PoluluMotor::PoluluMotor(uint8_t pinPWM, uint8_t pinIN1, uint8_t pinIN2){
   this->in1 = pinIN1;
   this->in2 = pinIN2;
   
-  this->myPID = new PID(&currSpeed, &output, &refSpeed, Kp, Ki, Kd, DIRECT);
+  this->lastInput = 0;
+  this->ITerm = 0;
 }
 
 
@@ -369,8 +371,8 @@ double PoluluMotor::getSpeed(){
   }
   
 //  Serial.println(analogRead(A0));
-  this->currSpeed = map(analogRead(A0), 0.0, 1024.0, 0.0, 1.0);
-  return this->currSpeed;
+//  this->currSpeed = map(analogRead(A0), 0.0, 1024.0, 0.0, 1.0);
+//  return this->currSpeed;
 }
 
 
@@ -449,7 +451,7 @@ void PoluluMotor::applyUpdate(){
     setPWM(this->pwm, this->refSpeed/MAX_SPEED); 
   }
   else { 
-    this->output = PIDCompute(this->currSpeed, this->refSpeed, this->Kp, this->Ki, this->Kd); 
+    this->output = PIDCompute(this->currSpeed, this->refSpeed, this->Kp, this->Ki, this->Kd, &(this->lastInput), &(this->ITerm)); 
 	double constrnVal = constrain(this->output, 0, 1);
 //	Serial.print("Output: ");   Serial.println( constrnVal);
     setPWM(this->pwm, constrnVal); 
