@@ -11,6 +11,7 @@ This library allows to interface upto 2 Polulu metal gearmotors with 48CPR encod
 - PID Algorithm
 - Limitations
 
+The discussion about the example codes with few other tips may be found at this [link](http://abhisheknkulkarni.wix.com/mypage#!PoluluMotor-Control-Library-for-Arduino/c1tpd/1)
 
 ## 1. Installation
 Download the ZIP archive from the git or clone the repository on your desktop. Move the complete folder in Arduino Library folder.
@@ -33,6 +34,8 @@ m1.setDuty(0.9);   // Sets 90% duty cycle
 ```
 or
 ```cpp
+m1.motorEnable(true); // Start the motor
+
 m1.setRefSpeed(100);  // Sets reference speed to 100 RPM
 m1.applyUpdate();     // Computes proportional PWM and applies it.
 ```
