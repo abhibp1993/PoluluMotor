@@ -14,9 +14,10 @@ This library allows to interface upto 2 Polulu metal gearmotors with 48CPR encod
 The discussion about the example codes with few other tips may be found at this [link](http://abhisheknkulkarni.wix.com/mypage#!PoluluMotor-Control-Library-for-Arduino/c1tpd/1)
 
 ## 1. Installation
-Download the ZIP archive from the git or clone the repository on your desktop. Move the complete folder in Arduino Library folder.
+Download the ZIP archive from the git or clone the repository on your desktop. Move the complete folder in Arduino Library folder. Copy the folders inside `Dependencies` folder directly under Arduino Library.
 In your sketch, include the library with
 ```cpp
+#include <PoluluWheelEncoders.h>
 #include <PoluluMotor.h>
 ```
 
